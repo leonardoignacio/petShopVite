@@ -37,8 +37,8 @@ function App() {
         
       { /* Posts */}
         <Route path="posts" element={<PostAdmin />} />
-        <Route path="posts/NovoPost" element={<FormPost />} />
-        <Route path="posts/:id" element={<FormPost />} />
+        <Route path="/admin/posts/NovoPost" element={<FormPost />} />
+        <Route path="/admin/posts/NovoPost/:id" element={<FormPost />} />
         
         <Route path="*" element={<Pagina404 />} />
       </Routes>

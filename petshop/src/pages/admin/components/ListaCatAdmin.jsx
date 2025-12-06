@@ -1,119 +1,147 @@
-import { useEffect, useState } from "react";
-import { busca } from "@api/api";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import "./tabela.css";
-import { Button } from "@mui/material";
-import { api } from "@api/api";
+import { 
+    Button, 
+    Container, 
+    Paper, 
+    Typography, 
+    Box, 
+    List, 
+    ListItem, 
+    ListItemText, 
+    ListItemButton,
+    IconButton, 
+    Stack, 
+    Divider,
+    Tooltip
+} from "@mui/material";
+
+// Ícones (npm install @mui/icons-material)
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+
+import { busca, api } from "@api/api";
+// import "./tabela.css"; // Arquivo CSS removido/desnecessário
+
 const ListaCatAdmin = () => {
-    const [categorias, setCategorias] = useState([])
+    const [categorias, setCategorias] = useState([]);
 
     useEffect(() => {
-        busca(`/categorias`, setCategorias)
-    }, [])
+        // Ajustei para usar a função busca corretamente
+        busca(`/categorias`, setCategorias);
+    }, []);
 
-     const excluir = (CategoriaDel) => {
-        api.delete(`categorias/${CategoriaDel.id}/`)
-            .then(() => {
-            // Remove a categoria do estado local para atualizar a UI
-            const listaCategorias = categorias
-                .filter(categoria => categoria.id !== CategoriaDel.id);
-            setCategorias([...listaCategorias]);
-        });
-    }
+    const excluir = (CategoriaDel) => {
+        if (window.confirm(`Tem certeza que deseja excluir "${CategoriaDel.nome}"?`)) {
+            api.delete(`categorias/${CategoriaDel.id}/`)
+                .then(() => {
+                    setCategorias(prevCategorias => 
+                        prevCategorias.filter(categoria => categoria.id !== CategoriaDel.id)
+                    );
+                })
+                .catch(err => {
+                    console.error("Erro ao excluir", err);
+                    alert("Erro ao excluir categoria.");
+                });
+        }
+    };
+
     return (
-        <section >
-            <table className="tabela">
-                <thead>
-                    <tr>
-                        <th className="tabela__coluna--g">Categoria</th>
-                        <th colSpan="3" className="tabela__coluna--p tabela__alinhamento--direita">
-                            <Link to="/admin/NovaCategoria">
-                                <Button
-                                    variant="contained"
-                                    fullWidth
-                                    sx={{ marginTop: 1 }}
-                                // usa o sistem de estilização Sx
+        <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+            <Paper elevation={3} sx={{ p: 3 }}>
+                
+                {/* Cabeçalho: Título + Botão de Nova Categoria */}
+                <Stack 
+                    direction="row" 
+                    justifyContent="space-between" 
+                    alignItems="center" 
+                    sx={{ mb: 3 }}
+                >
+                    <Typography variant="h5" component="h2" color="primary">
+                        Administrar Categorias
+                    </Typography>
+
+                    <Button 
+                        component={Link} 
+                        to="/admin/NovaCategoria"
+                        variant="contained" 
+                        startIcon={<AddCircleOutlineIcon />}
+                    >
+                        Nova Categoria
+                    </Button>
+                </Stack>
+
+                <Divider />
+
+                {/* Lista de Categorias */}
+                <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
+                    {categorias.length === 0 ? (
+                        <Typography sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
+                            Nenhuma categoria encontrada.
+                        </Typography>
+                    ) : (
+                        categorias.map((categoria, index) => (
+                            <React.Fragment key={categoria.id}>
+                                <ListItem
+                                    disablePadding
+                                    secondaryAction={
+                                        <Stack direction="row" spacing={1}>
+                                            {/* Botão Visualizar (Opcional, baseado no link original do nome) */}
+                                            <Tooltip title="Ver no Site">
+                                                <IconButton 
+                                                    component={Link} 
+                                                    to={`/categoria/${categoria.id}`}
+                                                    color="primary"
+                                                >
+                                                    <VisibilityIcon />
+                                                </IconButton>
+                                            </Tooltip>
+
+                                            {/* Botão Editar */}
+                                            <Tooltip title="Editar">
+                                                <IconButton 
+                                                    component={Link} 
+                                                    to={`/admin/categoria/${categoria.id}`}
+                                                    color="warning"
+                                                >
+                                                    <EditIcon />
+                                                </IconButton>
+                                            </Tooltip>
+
+                                            {/* Botão Excluir */}
+                                            <Tooltip title="Excluir">
+                                                <IconButton 
+                                                    edge="end" 
+                                                    aria-label="delete" 
+                                                    color="error"
+                                                    onClick={() => excluir(categoria)}
+                                                >
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Stack>
+                                    }
                                 >
-                                    Nova Categoria
-                                </Button>
-                            </Link>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {
-                        categorias.map((categoria) => (
-                            <tr key={categoria.id}>
-                                <td className="tabela__coluna--m">
-                                    <Link
-                                        to={`/categoria/${categoria.id}`}
-                                    >
-                                        {categoria.nome}
-                                    </Link>
-                                </td>
-                                 <td
-                                        colSpan="2"
-                                        className="tabela__coluna--p tabela__alinhamento--direita"
-                                    >
-                                    {/* Botão EDITAR */}
-                                    <Link
-                                        to={`/admin/categoria/${categoria.id}`}
-                                        style={{ textDecoration: 'none' }}
-                                    >
-                                        <Button
-                                            type="button"
-                                            variant="contained"
-                                            color="warning"
-                                        // Cor MUI para Alerta/Atenção
-                                        >
-                                            Editar
-                                        </Button>
-                                    </Link>
-                                    
-                                    {/* Botão EXCLUIR */}
-                                    
-                                    <Link
-                                        to="/admin"
-                                        style={{ textDecoration: 'none' }}
-                                    >
-                                        <Button
-                                            onClick={() => excluir(categoria)}
-                                           type="button"
-                                            variant="contained"
-                                            color="error"
-                                            // Cor MUI para Erro/Remoção
-                                            sx={{ margin: "0 0.25rem" }}
-                                        >
-                                            Excluir
-                                        </Button>
-                                    </Link>
-                                    </td>
-                                    <td
-                                        colSpan="2"
-                                        className="tabela__coluna--p tabela__alinhamento--direita"
-                                    >
-                                    <Link
-                                        to={`/admin/form/categoria/${categoria.id}`}
-                                        style={{ textDecoration: 'none' }}
-                                    >
-                                        <Button
-                                           type="button"
-                                            variant="outlined"
-                                            color="secondary"
-                                            // Cor MUI para Erro/Remoção
-                                            sx={{ margin: "0 0.25rem" }}
-                                        >
-                                            SubCategoria
-                                        </Button>
-                                    </Link>
-                                </td>
-                            </tr>
+                                    {/* Área clicável do texto (Leva para edição ou visualização, conforme sua preferência) */}
+                                    <ListItemButton component={Link} to={`/admin/categoria/${categoria.id}`}>
+                                        <ListItemText 
+                                            primary={categoria.nome} 
+                                            primaryTypographyProps={{ fontWeight: 'medium' }}
+                                        />
+                                    </ListItemButton>
+                                </ListItem>
+                                
+                                {/* Adiciona uma linha divisória, exceto após o último item */}
+                                {index < categorias.length - 1 && <Divider component="li" />}
+                            </React.Fragment>
                         ))
-                    }
-                </tbody>
-            </table>
-        </section>
-    )
+                    )}
+                </List>
+            </Paper>
+        </Container>
+    );
 }
 
-export default ListaCatAdmin
+export default ListaCatAdmin;
